@@ -1,0 +1,227 @@
+import os
+import math
+
+# Dicionário com códigos de escape ANSI para colorir o terminal
+CORES = {
+    "VERDE": "\033[92m",
+    "VERMELHO": "\033[91m",
+    "CIANO": "\033[96m",
+    "AMARELO": "\033[93m",
+    "AZUL": "\033[94m",
+    "MAGENTA": "\033[95m",
+    "RESET": "\033[0m"
+}
+
+# Configurações do Cinema
+FILEIRAS = ['A', 'B', 'C', 'D', 'E']
+VAGAS_POR_FILEIRA = 8
+
+FILMES = {
+    "1": "Batman: O Cavaleiro das Trevas",
+    "2": "Interestelar",
+    "3": "A Origem"
+}
+
+HORARIOS = {
+    "1": "14:00",
+    "2": "17:30",
+    "3": "21:00"
+}
+
+def obter_nome_arquivo(filme_id, horario_id):
+    """Gera um nome de arquivo único para cada sessão."""
+    return f"sala_filme_{filme_id}_hora_{horario_id}.txt"
+
+def inicializar_sala():
+    """Cria uma matriz de assentos vazia (0 = Livre, 1 = Ocupado)."""
+    return {f: [0] * VAGAS_POR_FILEIRA for f in FILEIRAS}
+
+def carregar_sala(filme_id, horario_id):
+    """Carrega o estado da sala do arquivo de texto ou cria um novo se não existir."""
+    nome_arquivo = obter_nome_arquivo(filme_id, horario_id)
+    sala = inicializar_sala()
+    
+    if os.path.exists(nome_arquivo):
+        with open(nome_arquivo, "r") as f:
+            linhas = f.readlines()
+            for linha in linhas:
+                if ":" in linha:
+                    fileira, assentos_str = linha.strip().split(":")
+                    if fileira in sala:
+                        sala[fileira] = [int(x) for x in assentos_str.split(",")]
+    return sala
+
+def salvar_sala(filme_id, horario_id, sala):
+    """Salva o estado atual da sala no arquivo de texto."""
+    nome_arquivo = obter_nome_arquivo(filme_id, horario_id)
+    with open(nome_arquivo, "w") as f:
+        for fileira, assentos in sala.items():
+            assentos_str = ",".join(str(x) for x in assentos)
+            f.write(f"{fileira}:{assentos_str}\n")
+
+def exibir_sala(sala):
+    """Exibe o mapa da sala com cores ANSI (Verde = Livre, Vermelho = Ocupado)."""
+    print("\n" + "="*25 + " TELA " + "="*25)
+    print("     ", "  ".join(f"{i+1:02d}" for i in range(VAGAS_POR_FILEIRA)))
+    print("-" * 35)
+    
+    for fileira in FILEIRAS:
+        print(f" {fileira} | ", end="")
+        for status in sala[fileira]:
+            if status == 0:
+                # Usando tabela ANSI para Verde
+                print(f"{CORES['VERDE']}■{CORES['RESET']}  ", end="")
+            else:
+                # Usando tabela ANSI para Vermelho
+                print(f"{CORES['VERMELHO']}■{CORES['RESET']}  ", end="")
+        print()
+    print("=" * 56)
+    print(f"Legenda: {CORES['VERDE']}■ Livre{CORES['RESET']}  |  {CORES['VERMELHO']}■ Ocupado{CORES['RESET']}\n")
+
+def converter_assento(assento_str):
+    """Converte uma string tipo 'A3' em fileira ('A') e índice (2)."""
+    try:
+        assento_str = assento_str.strip().upper()
+        fileira = assento_str[0]
+        numero = int(assento_str[1:]) - 1
+        if fileira in FILEIRAS and 0 <= numero < VAGAS_POR_FILEIRA:
+            return fileira, numero
+    except:
+        pass
+    return None, None
+
+def recomendar_proximos(sala, f_alvo, n_alvo):
+    """Busca os assentos livres mais próximos usando a distância geométrica."""
+    recomendacoes = []
+    idx_f_alvo = FILEIRAS.index(f_alvo)
+    
+    for f_idx, fileira in enumerate(FILEIRAS):
+        for numero in range(VAGAS_POR_FILEIRA):
+            if sala[fileira][numero] == 0:  # Se está livre
+                distancia = math.sqrt((f_idx - idx_f_alvo)**2 + (numero - n_alvo)**2)
+                recomendacoes.append((f"{fileira}{numero+1}", distancia))
+                
+    recomendacoes.sort(key=lambda x: x[1])
+    return [r[0] for r in recomendacoes[:3]] # Retorna as 3 mais próximas
+
+def escolher_sessao():
+    """Menu para escolha de filme e horário."""
+    print(f"\n{CORES['CIANO']}=== SELEÇÃO DE FILME ===")
+    for k, v in FILMES.items():
+        print(f"[{k}] {v}")
+    filme = input("Escolha o filme: ")
+    if filme not in FILMES:
+        print("Filme inválido!")
+        return None, None
+
+    print(f"\n{CORES['CIANO']}=== SELEÇÃO DE HORÁRIO ===")
+    for k, v in HORARIOS.items():
+        print(f"[{k}] {v}")
+    horario = input("Escolha o horário: ")
+    if horario not in HORARIOS:
+        print("Horário inválido!")
+        return None, None
+        
+    return filme, horario
+
+def gerenciar_reserva(filme, horario, acao="reservar"):
+    """Controla o fluxo de reservar ou trocar assentos."""
+    sala = carregar_sala(filme, horario)
+    exibir_sala(sala)
+    
+    if acao == "reservar":
+        print("Digite o assento desejado (Ex: A3, B5): ")
+        entrada = input(">> ")
+        fileira, num = converter_assento(entrada)
+        
+        if not fileira:
+            print(f"{CORES['AMARELO']}Assento inválido!")
+            return
+            
+        if sala[fileira][num] == 0:
+            sala[fileira][num] = 1
+            salvar_sala(filme, horario, sala)
+            print(f"{CORES['VERDE']}✓ Assento {fileira}{num+1} reservado com sucesso!")
+        else:
+            print(f"{CORES['VERMELHO']}✗ O assento {fileira}{num+1} já está ocupado.")
+            proximos = recomendar_proximos(sala, fileira, num)
+            if proximos:
+                print(f"{CORES['CIANO']}Sugestões de assentos livres próximos: {', '.join(proximos)}")
+                aceita = input("Deseja escolher um destes? (Digite o assento ou 'N' para cancelar): ").strip().upper()
+                f_sug, n_sug = converter_assento(aceita)
+                if f_sug and aceita in proximos and sala[f_sug][n_sug] == 0:
+                    sala[f_sug][n_sug] = 1
+                    salvar_sala(filme, horario, sala)
+                    print(f"{CORES['VERDE']}✓ Assento {aceita} reservado com sucesso!")
+                else:
+                    print("Operação cancelada.")
+            else:
+                print("Não há assentos disponíveis por perto.")
+                
+    elif acao == "trocar":
+        print("Digite o assento que você POSSUI atualmente (Ex: A3): ")
+        atual = input(">> ")
+        f_atual, n_atual = converter_assento(atual)
+        
+        if not f_atual or sala[f_atual][n_atual] == 0:
+            print(f"{CORES['AMARELO']}Você não possui uma reserva nesse assento.")
+            return
+            
+        print("Digite o NOVO assento desejado: ")
+        novo = input(">> ")
+        f_novo, n_novo = converter_assento(novo)
+        
+        if not f_novo:
+            print(f"{CORES['AMARELO']}Novo assento inválido!")
+            return
+            
+        if sala[f_novo][n_novo] == 0:
+            # Libera o antigo e ocupa o novo
+            sala[f_atual][n_atual] = 0
+            sala[f_novo][n_novo] = 1
+            salvar_sala(filme, horario, sala)
+            print(f"{CORES['VERDE']}✓ Troca realizada com sucesso! Saiu de {atual} para {novo}.")
+        else:
+            print(f"{CORES['VERMELHO']}✗ O novo assento {novo} está ocupado. Troca não realizada.")
+
+# --- MENU PRINCIPAL ---
+def menu():
+    filme_id, horario_id = None, None
+    
+    while True:
+        print(f"\n{CORES['AZUL']}=====================================")
+        print(f"{CORES['AZUL']}=== CINEMA - SISTEMA DE ASSENTOS ===")
+        print(f"{CORES['AZUL']}=====================================")
+        if filme_id and horario_id:
+            print(f"{CORES['MAGENTA']}Sessão Atual: {FILMES[filme_id]} às {HORARIOS[horario_id]}")
+        else:
+            print(f"{CORES['AMARELO']}Nenhuma sessão selecionada.")
+        print("-" * 37)
+        print("[1] Selecionar/Trocar Sessão (Filme/Horário)")
+        print("[2] Ver Mapa de Assentos")
+        print("[3] Reservar Assento")
+        print("[4] Trocar de Assento")
+        print("[5] Sair")
+        
+        opcao = input("Escolha uma opção: ").strip()
+        
+        if opcao == "1":
+            filme_id, horario_id = escolher_sessao()
+        elif opcao in ["2", "3", "4"] and not (filme_id and horario_id):
+            print(f"{CORES['AMARELO']}Por favor, selecione primeiro uma sessão na opção [1].")
+        elif opcao == "2":
+            sala = carregar_sala(filme_id, horario_id)
+            exibir_sala(sala)
+        elif opcao == "3":
+            gerenciar_reserva(filme_id, horario_id, "reservar")
+        elif opcao == "4":
+            gerenciar_reserva(filme_id, horario_id, "trocar")
+        elif opcao == "5":
+            print(f"{CORES['CIANO']}Obrigado por utilizar nosso sistema! Até logo.")
+            break
+        else:
+            if opcao != "1" and opcao not in ["2", "3", "4", "5"]:
+                print(f"{CORES['VERMELHO']}Opção inválida!")
+
+if __name__ == "__main__":
+    menu()
