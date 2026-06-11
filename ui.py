@@ -2,9 +2,7 @@ import os
 import sys
 import time
 
-# ══════════════════════════════════════════════════════════════════
-#  CORES ANSI
-# ══════════════════════════════════════════════════════════════════
+# cores ANSI — adiciona mais aqui se precisar
 C = {
     "RESET":    "\033[0m",
     "BOLD":     "\033[1m",
@@ -44,24 +42,23 @@ def digitar_animado(texto, delay=0.018):
         time.sleep(delay)
     print()
 
-# ══════════════════════════════════════════════════════════════════
-#  MENSAGENS
-# ══════════════════════════════════════════════════════════════════
+
+# mensagens de feedback pro usuario
+
 def msg_ok(texto):
-    print(f"\n  {cor('✔', C['GREEN'], C['BOLD'])}  {cor(texto, C['GREEN'])}")
+    print(f"\n  {cor('+', C['GREEN'], C['BOLD'])}  {cor(texto, C['GREEN'])}")
 
 def msg_erro(texto):
-    print(f"\n  {cor('✘', C['RED'], C['BOLD'])}  {cor(texto, C['RED'])}")
+    print(f"\n  {cor('x', C['RED'], C['BOLD'])}  {cor(texto, C['RED'])}")
 
 def msg_info(texto):
-    print(f"  {cor('ℹ', C['CYAN'])}  {cor(texto, C['CYAN'])}")
+    print(f"  {cor('>', C['CYAN'])}  {cor(texto, C['CYAN'])}")
 
 def msg_aviso(texto):
-    print(f"  {cor('⚠', C['YELLOW'])}  {cor(texto, C['YELLOW'])}")
+    print(f"  {cor('!', C['YELLOW'])}  {cor(texto, C['YELLOW'])}")
 
-# ══════════════════════════════════════════════════════════════════
-#  DIVISORES
-# ══════════════════════════════════════════════════════════════════
+
+# divisores — nao mexer, o titulo_secao e cheio de magia negra
 from config import LARGURA
 
 def linha_dupla():
@@ -78,9 +75,8 @@ def titulo_secao(texto):
           cor(texto, C["WHITE"], C["BOLD"]) +
           cor(f" ]{'═'*dir_}╣", C["GOLD"], C["DIM"]))
 
-# ══════════════════════════════════════════════════════════════════
-#  LOGO
-# ══════════════════════════════════════════════════════════════════
+
+# logo — deixa quieto, levou tempo pra alinhar isso
 def exibir_logo():
     linhas = [
         "",
@@ -104,7 +100,7 @@ def exibir_logo():
         cor("   ╚═════╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝  ", C["DARK_RED"], C["BOLD"]) +
         cor("║", C["GOLD"], C["BOLD"]),
         cor("  ║", C["GOLD"], C["BOLD"]) +
-        cor("              🎬  O CINEMA QUE VOCÊ MERECE  🎬               ", C["YELLOW"]) +
+        cor("                  O CINEMA QUE VOCE MERECE                   ", C["YELLOW"]) +
         cor("║", C["GOLD"], C["BOLD"]),
         cor("  ╚═══════════════════════════════════════════════════════════╝", C["GOLD"], C["BOLD"]),
         "",
