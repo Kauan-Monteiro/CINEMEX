@@ -8,12 +8,11 @@ from ui      import (cor, C, limpar, pausar, digitar_animado,
 from storage import carregar_sala, salvar_sala
 from sala    import exibir_sala, converter_assento, label_assento, recomendar_proximos
 
-# ══════════════════════════════════════════════════════════════════
-#  SELEÇÃO DE SESSÃO
-# ══════════════════════════════════════════════════════════════════
+
+# selecao de sessao
 
 def selecionar_sessao():
-    """Exibe filmes e horários; retorna (filme_id, horario_id) ou (None, None)."""
+    # mostra filmes e horarios, devolve (filme_id, horario_id) ou (None, None) se o usuario desistir
     limpar()
     exibir_logo()
     linha_dupla()
@@ -22,28 +21,29 @@ def selecionar_sessao():
     print()
 
     for k, f in FILMES.items():
+        # cor da classificacao: verde pra livre, amarelo pra 16, vermelho pra 18
         classif_cor = (C["GREEN"]  if f["classif"] in ("L", "12")
                   else C["YELLOW"] if f["classif"] == "16"
                   else C["RED"])
         preco_str = f"R$ {f['preco']:.2f}"
-        print(f"  {cor(f'[{k}]', C['GOLD'], C['BOLD'])}  {f['emoji']}  "
+        print(f"  {cor(f'[{k}]', C['GOLD'], C['BOLD'])}  "
               f"{cor(f['titulo'], C['WHITE'], C['BOLD'])}")
-        print(f"       {cor(f['genero'], C['CYAN'])}  ·  {cor(f['duracao'], C['DIM'])}  ·  "
-              f"Classif. {cor(f['classif'], classif_cor, C['BOLD'])}  ·  "
+        print(f"       {cor(f['genero'], C['CYAN'])}  .  {cor(f['duracao'], C['DIM'])}  .  "
+              f"Classif. {cor(f['classif'], classif_cor, C['BOLD'])}  .  "
               f"{cor(preco_str, C['GOLD'])}")
         linha_simples()
 
     print()
-    filme_id = input(cor("  Escolha o número do filme: ", C["YELLOW"])).strip()
+    filme_id = input(cor("  Escolha o numero do filme: ", C["YELLOW"])).strip()
     if filme_id not in FILMES:
-        msg_erro("Filme inválido.")
+        msg_erro("Filme invalido.")
         pausar()
         return None, None
 
     limpar()
     exibir_logo()
     linha_dupla()
-    titulo_secao(f"HORÁRIOS — {FILMES[filme_id]['titulo']}")
+    titulo_secao(f"HORARIOS — {FILMES[filme_id]['titulo']}")
     linha_dupla()
     print()
     hoje = datetime.now().strftime("%d/%m/%Y")
@@ -51,35 +51,32 @@ def selecionar_sessao():
 
     for k, h in HORARIOS.items():
         sala_tmp = carregar_sala(filme_id, k)
-        livres   = sum(s == 0 for f in FILMES for s in sala_tmp.get(f, []))
-        # contagem correta percorrendo todas as fileiras
         livres = sum(sala_tmp[fila][i] == 0
                      for fila in sala_tmp
                      for i in range(len(sala_tmp[fila])))
-        print(f"  {cor(f'[{k}]', C['GOLD'], C['BOLD'])}  🕐 {cor(h, C['WHITE'], C['BOLD'])}  "
-              f"─  {cor(f'{livres} assentos disponíveis', C['GREEN'] if livres > 5 else C['YELLOW'])}")
+        print(f"  {cor(f'[{k}]', C['GOLD'], C['BOLD'])}  {cor(h, C['WHITE'], C['BOLD'])}  "
+              f"--  {cor(f'{livres} assentos disponiveis', C['GREEN'] if livres > 5 else C['YELLOW'])}")
 
     print()
-    horario_id = input(cor("  Escolha o horário: ", C["YELLOW"])).strip()
+    horario_id = input(cor("  Escolha o horario: ", C["YELLOW"])).strip()
     if horario_id not in HORARIOS:
-        msg_erro("Horário inválido.")
+        msg_erro("Horario invalido.")
         pausar()
         return None, None
 
     return filme_id, horario_id
 
-# ══════════════════════════════════════════════════════════════════
-#  ESCOLHA DE ASSENTO
-# ══════════════════════════════════════════════════════════════════
+
+# escolha do assento
 
 def escolher_assento(filme_id, horario_id):
-    """Loop de seleção de assento. Retorna (fileira, idx) ou None."""
+    # fica em loop ate o usuario confirmar um assento livre ou digitar 0 pra sair
     while True:
         sala = carregar_sala(filme_id, horario_id)
         limpar()
         exibir_logo()
         print(f"  {cor(FILMES[filme_id]['titulo'], C['WHITE'], C['BOLD'])}  "
-              f"{cor('·', C['DIM'])}  {cor(HORARIOS[horario_id], C['CYAN'])}\n")
+              f"{cor('.', C['DIM'])}  {cor(HORARIOS[horario_id], C['CYAN'])}\n")
         exibir_sala(sala)
 
         print(cor("  Digite o assento desejado (ex: A3, C7) ou [0] para voltar:", C["YELLOW"]))
@@ -91,15 +88,15 @@ def escolher_assento(filme_id, horario_id):
         fileira, num = converter_assento(entrada)
 
         if not fileira:
-            msg_erro("Formato inválido. Use letra + número (ex: B4).")
+            msg_erro("Formato invalido. Use letra + numero (ex: B4).")
             pausar("  Pressione ENTER para tentar novamente...")
             continue
 
         if sala[fileira][num] == 1:
-            msg_erro(f"O assento {label_assento(fileira, num)} está ocupado.")
+            msg_erro(f"O assento {label_assento(fileira, num)} esta ocupado.")
             proximos = recomendar_proximos(sala, fileira, num)
             if proximos:
-                msg_info(f"Assentos próximos disponíveis: "
+                msg_info(f"Assentos proximos disponiveis: "
                          f"{cor(', '.join(proximos), C['CYAN'], C['BOLD'])}")
                 escolha = input(cor("  Selecione um dos sugeridos ou outro assento: ",
                                     C["YELLOW"])).strip()
@@ -108,14 +105,14 @@ def escolher_assento(filme_id, horario_id):
                 f2, n2 = converter_assento(escolha)
                 if f2 and sala[f2][n2] == 0:
                     return f2, n2
-                msg_erro("Assento inválido ou ocupado.")
+                msg_erro("Assento invalido ou ocupado.")
                 pausar()
             else:
-                msg_aviso("Não há assentos disponíveis na sala.")
+                msg_aviso("Nao ha assentos disponiveis na sala.")
                 pausar()
             continue
 
-        # Pré-visualização com destaque
+        # pre-visualizacao com o assento marcado antes de confirmar
         limpar()
         exibir_logo()
         exibir_sala(sala, destacar=(fileira, num))
@@ -124,12 +121,12 @@ def escolher_assento(filme_id, horario_id):
         if resp == "S":
             return fileira, num
 
-# ══════════════════════════════════════════════════════════════════
-#  CHECKOUT / PAGAMENTO
-# ══════════════════════════════════════════════════════════════════
+
+# checkout e pagamento
 
 def checkout(filme_id, horario_id, fileira, num):
-    """Exibe resumo, aplica descontos, registra reserva. Retorna True se confirmado."""
+    # exibe resumo, aplica descontos e salva a reserva
+    # retorna True se tudo confirmado, False se o usuario cancelar no meio
     filme      = FILMES[filme_id]
     preco_base = filme["preco"]
 
@@ -140,25 +137,25 @@ def checkout(filme_id, horario_id, fileira, num):
     linha_dupla()
     print()
     print(f"  {cor('Filme:', C['DIM'])}   {cor(filme['titulo'], C['WHITE'], C['BOLD'])}")
-    print(f"  {cor('Horário:', C['DIM'])} {cor(HORARIOS[horario_id], C['CYAN'])}")
+    print(f"  {cor('Horario:', C['DIM'])} {cor(HORARIOS[horario_id], C['CYAN'])}")
     print(f"  {cor('Assento:', C['DIM'])} {cor(label_assento(fileira, num), C['YELLOW'], C['BOLD'])}")
     print(f"  {cor('Valor:', C['DIM'])}   {cor(f'R$ {preco_base:.2f}', C['GOLD'], C['BOLD'])}")
     print()
 
-    # Desconto estudante
+    # desconto estudante — precisa apresentar carteirinha na bilheteria
     linha_simples()
     titulo_secao("DESCONTO ESTUDANTE")
     linha_simples()
     print()
     print(f"  Meia-entrada para estudantes: {cor('50% de desconto', C['GREEN'], C['BOLD'])}")
-    msg_aviso("Apresente carteirinha válida na bilheteria.")
+    msg_aviso("Apresente carteirinha valida na bilheteria.")
     print()
-    eh_estudante = input(cor("  Você é estudante? [S/N]: ", C["YELLOW"])).strip().upper()
+    eh_estudante = input(cor("  Voce e estudante? [S/N]: ", C["YELLOW"])).strip().upper()
     desconto = preco_base * 0.50 if eh_estudante == "S" else 0.0
     if desconto:
         msg_ok(f"Desconto de R$ {desconto:.2f} aplicado!")
 
-    # Forma de pagamento
+    # forma de pagamento
     print()
     linha_simples()
     titulo_secao("FORMA DE PAGAMENTO")
@@ -166,11 +163,11 @@ def checkout(filme_id, horario_id, fileira, num):
     print()
     for k, (nome, detalhe) in FORMAS_PAGAMENTO.items():
         print(f"  {cor(f'[{k}]', C['GOLD'], C['BOLD'])}  {cor(nome, C['WHITE'])}  "
-              f"{cor('—', C['DIM'])}  {cor(detalhe, C['DIM'])}")
+              f"{cor('--', C['DIM'])}  {cor(detalhe, C['DIM'])}")
     print()
     pagamento_id = input(cor("  Escolha a forma de pagamento: ", C["YELLOW"])).strip()
     if pagamento_id not in FORMAS_PAGAMENTO:
-        msg_erro("Opção inválida. Cancelando.")
+        msg_erro("Opcao invalida. Cancelando.")
         pausar()
         return False
 
@@ -180,14 +177,14 @@ def checkout(filme_id, horario_id, fileira, num):
 
     preco_final = max(0, preco_base - desconto - desconto_pix)
 
-    # Comprovante
+    # comprovante final antes de confirmar
     print()
     linha_dupla()
     titulo_secao("COMPROVANTE")
     linha_dupla()
     print()
     print(f"  {cor('Filme:', C['DIM'])}        {cor(filme['titulo'], C['WHITE'], C['BOLD'])}")
-    print(f"  {cor('Horário:', C['DIM'])}      {cor(HORARIOS[horario_id], C['CYAN'])}")
+    print(f"  {cor('Horario:', C['DIM'])}      {cor(HORARIOS[horario_id], C['CYAN'])}")
     print(f"  {cor('Assento:', C['DIM'])}      {cor(label_assento(fileira, num), C['YELLOW'], C['BOLD'])}")
     linha_simples()
     print(f"  {cor('Valor base:', C['DIM'])}   R$ {preco_base:.2f}")
@@ -207,28 +204,27 @@ def checkout(filme_id, horario_id, fileira, num):
         pausar()
         return False
 
-    # Persiste reserva
+    # salva no arquivo da sessao
     sala = carregar_sala(filme_id, horario_id)
     sala[fileira][num] = 1
     salvar_sala(filme_id, horario_id, sala)
 
     print()
-    digitar_animado(cor("  ✔  Reserva confirmada com sucesso!", C["GREEN"], C["BOLD"]))
-    msg_info(f"Assento {label_assento(fileira, num)} — {filme['titulo']} — {HORARIOS[horario_id]}")
+    digitar_animado(cor("  Reserva confirmada com sucesso!", C["GREEN"], C["BOLD"]))
+    msg_info(f"Assento {label_assento(fileira, num)} -- {filme['titulo']} -- {HORARIOS[horario_id]}")
     print()
 
     linha_simples()
-    ver_trailer = input(cor("  Deseja assistir ao trailer no YouTube? [S/N]: ", C["CYAN"])).strip().upper()
+    ver_trailer = input(cor("  Quer assistir ao trailer no YouTube? [S/N]: ", C["CYAN"])).strip().upper()
     if ver_trailer == "S":
-        msg_info("Abrindo trailer no navegador...")
+        msg_info("Abrindo no navegador...")
         webbrowser.open(filme["trailer"])
 
     pausar("\n  Pressione ENTER para voltar ao menu...")
     return True
 
-# ══════════════════════════════════════════════════════════════════
-#  TROCAR ASSENTO
-# ══════════════════════════════════════════════════════════════════
+
+# troca de assento
 
 def trocar_assento(filme_id, horario_id):
     sala = carregar_sala(filme_id, horario_id)
@@ -242,7 +238,7 @@ def trocar_assento(filme_id, horario_id):
     )
 
     if not f_atual or sala[f_atual][n_atual] == 0:
-        msg_erro("Assento atual inválido ou não reservado.")
+        msg_erro("Assento atual invalido ou nao reservado.")
         pausar()
         return
 
@@ -252,24 +248,23 @@ def trocar_assento(filme_id, horario_id):
     )
 
     if not f_novo:
-        msg_erro("Novo assento inválido.")
+        msg_erro("Novo assento invalido.")
         pausar()
         return
 
     if sala[f_novo][n_novo] == 1:
-        msg_erro(f"O assento {label_assento(f_novo, n_novo)} já está ocupado.")
+        msg_erro(f"O assento {label_assento(f_novo, n_novo)} ja esta ocupado.")
         pausar()
         return
 
     sala[f_atual][n_atual] = 0
     sala[f_novo][n_novo]   = 1
     salvar_sala(filme_id, horario_id, sala)
-    msg_ok(f"Troca realizada: {label_assento(f_atual, n_atual)} → {label_assento(f_novo, n_novo)}")
+    msg_ok(f"Troca realizada: {label_assento(f_atual, n_atual)} -> {label_assento(f_novo, n_novo)}")
     pausar()
 
-# ══════════════════════════════════════════════════════════════════
-#  CANCELAR RESERVA
-# ══════════════════════════════════════════════════════════════════
+
+# cancelamento de reserva
 
 def cancelar_reserva(filme_id, horario_id):
     sala = carregar_sala(filme_id, horario_id)
@@ -283,7 +278,7 @@ def cancelar_reserva(filme_id, horario_id):
     )
 
     if not fileira or sala[fileira][num] == 0:
-        msg_erro("Assento inválido ou já está livre.")
+        msg_erro("Assento invalido ou ja esta livre.")
         pausar()
         return
 
@@ -297,5 +292,5 @@ def cancelar_reserva(filme_id, horario_id):
         salvar_sala(filme_id, horario_id, sala)
         msg_ok("Reserva cancelada com sucesso.")
     else:
-        msg_aviso("Operação cancelada.")
+        msg_aviso("Operacao cancelada.")
     pausar()
