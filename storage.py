@@ -1,20 +1,17 @@
 import os
 from config import DATA_DIR, FILEIRAS, VAGAS_POR_FILEIRA
 
-# ══════════════════════════════════════════════════════════════════
-#  PERSISTÊNCIA EM ARQUIVO .TXT
+# persistencia em arquivo .txt
 #
-#  Formato do arquivo sala_<filme_id>_<horario_id>.txt:
-#
-#  Cada linha representa uma fileira:
-#    A:0000000000
-#    B:0010100000
-#    ...
-#
-#  0 = livre, 1 = ocupado
-# ══════════════════════════════════════════════════════════════════
+# formato: sala_<filme_id>_<horario_id>.txt
+# cada linha e uma fileira:
+#   A:0000000000
+#   B:0010100000
+# 0 = livre, 1 = ocupado — simples e funciona
+
 
 def _garantir_data_dir():
+    # cria a pasta de dados se nao existir ainda
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
 
@@ -22,11 +19,11 @@ def _caminho_sala(filme_id, horario_id):
     return os.path.join(DATA_DIR, f"sala_{filme_id}_{horario_id}.txt")
 
 def inicializar_sala():
-    """Retorna sala vazia: dict[fileira] = lista de 0s."""
+    # sala zerada, tudo livre
     return {f: [0] * VAGAS_POR_FILEIRA for f in FILEIRAS}
 
 def carregar_sala(filme_id, horario_id):
-    """Lê o arquivo .txt e devolve o dicionário da sala."""
+    # le o arquivo e monta o dict; se nao existir ainda, devolve sala vazia
     _garantir_data_dir()
     caminho = _caminho_sala(filme_id, horario_id)
 
@@ -45,12 +42,13 @@ def carregar_sala(filme_id, horario_id):
                 if fileira in FILEIRAS and len(assentos) == VAGAS_POR_FILEIRA:
                     sala[fileira] = [int(c) for c in assentos]
     except (ValueError, IOError):
+        # arquivo corrompido ou ilegivel — começa do zero
         return inicializar_sala()
 
     return sala
 
 def salvar_sala(filme_id, horario_id, sala):
-    """Grava o dicionário da sala no arquivo .txt."""
+    # grava cada fileira como uma linha no arquivo
     _garantir_data_dir()
     caminho = _caminho_sala(filme_id, horario_id)
 
