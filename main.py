@@ -7,9 +7,8 @@ from reservas import (selecionar_sessao, escolher_assento, checkout,
 from storage  import carregar_sala
 from sala     import exibir_sala
 
-# ══════════════════════════════════════════════════════════════════
-#  MENU PRINCIPAL
-# ══════════════════════════════════════════════════════════════════
+
+# menu principal — loop principal do programa
 
 def menu():
     filme_id   = None
@@ -23,35 +22,36 @@ def menu():
         linha_dupla()
         print()
 
+        # mostra a sessao ativa no topo, se ja tiver uma escolhida
         if filme_id and horario_id:
             filme = FILMES[filme_id]
-            print(f"  {cor('Sessão ativa:', C['DIM'])} "
+            print(f"  {cor('Sessao ativa:', C['DIM'])} "
                   f"{cor(filme['titulo'], C['WHITE'], C['BOLD'])}  "
-                  f"{cor('·', C['DIM'])}  {cor(HORARIOS[horario_id], C['CYAN'])}")
+                  f"{cor('.', C['DIM'])}  {cor(HORARIOS[horario_id], C['CYAN'])}")
         else:
-            msg_aviso("Nenhuma sessão selecionada.")
+            msg_aviso("Nenhuma sessao selecionada.")
 
         print()
-        print(f"  {cor('[1]', C['GOLD'], C['BOLD'])}  🎬  Selecionar Filme e Horário")
-        print(f"  {cor('[2]', C['GOLD'], C['BOLD'])}  🪑  Ver Mapa de Assentos")
-        print(f"  {cor('[3]', C['GOLD'], C['BOLD'])}  🎟️   Reservar Assento")
-        print(f"  {cor('[4]', C['GOLD'], C['BOLD'])}  🔁  Trocar de Assento")
-        print(f"  {cor('[5]', C['GOLD'], C['BOLD'])}  ❌  Cancelar Reserva")
-        print(f"  {cor('[0]', C['RED']            )}  🚪  Sair")
+        print(f"  {cor('[1]', C['GOLD'], C['BOLD'])}  Selecionar Filme e Horario")
+        print(f"  {cor('[2]', C['GOLD'], C['BOLD'])}  Ver Mapa de Assentos")
+        print(f"  {cor('[3]', C['GOLD'], C['BOLD'])}  Reservar Assento")
+        print(f"  {cor('[4]', C['GOLD'], C['BOLD'])}  Trocar de Assento")
+        print(f"  {cor('[5]', C['GOLD'], C['BOLD'])}  Cancelar Reserva")
+        print(f"  {cor('[0]', C['RED']            )}  Sair")
         print()
         linha_dupla()
 
-        opcao = input(cor("  Escolha uma opção: ", C["YELLOW"])).strip()
+        opcao = input(cor("  Escolha uma opcao: ", C["YELLOW"])).strip()
 
         if opcao == "1":
             f, h = selecionar_sessao()
             if f and h:
                 filme_id, horario_id = f, h
-                msg_ok(f"Sessão selecionada: {FILMES[filme_id]['titulo']} às {HORARIOS[horario_id]}")
+                msg_ok(f"Sessao selecionada: {FILMES[filme_id]['titulo']} as {HORARIOS[horario_id]}")
                 pausar()
 
         elif opcao in ("2", "3", "4", "5") and not (filme_id and horario_id):
-            msg_aviso("Selecione uma sessão primeiro (opção 1).")
+            msg_aviso("Selecione uma sessao primeiro (opcao 1).")
             pausar()
 
         elif opcao == "2":
@@ -59,7 +59,7 @@ def menu():
             exibir_logo()
             sala = carregar_sala(filme_id, horario_id)
             print(f"  {cor(FILMES[filme_id]['titulo'], C['WHITE'], C['BOLD'])}  "
-                  f"{cor('·', C['DIM'])}  {cor(HORARIOS[horario_id], C['CYAN'])}\n")
+                  f"{cor('.', C['DIM'])}  {cor(HORARIOS[horario_id], C['CYAN'])}\n")
             exibir_sala(sala)
             pausar()
 
@@ -79,13 +79,13 @@ def menu():
             limpar()
             exibir_logo()
             print()
-            digitar_animado(cor("  Obrigado por usar o CINEMEX. Bom filme! 🍿",
+            digitar_animado(cor("  Obrigado por usar o CINEMEX. Bom filme!",
                                 C["GOLD"], C["BOLD"]))
             print()
             break
 
         else:
-            msg_erro("Opção inválida. Tente novamente.")
+            msg_erro("Opcao invalida. Tente novamente.")
             pausar()
 
 
