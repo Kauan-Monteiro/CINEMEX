@@ -3,7 +3,7 @@ from config import FILEIRAS, VAGAS_POR_FILEIRA, LARGURA
 from ui import cor, C, linha_dupla, linha_simples, titulo_secao
 
 
-# utils de assento — converter string pra indice e vice-versa
+# utils de assento. converter string pra indice e viceversa
 
 def label_assento(fileira, idx):
     # ('A', 2) vira 'A3'
